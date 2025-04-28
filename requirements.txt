@@ -3,5 +3,5 @@ requests
 openai
 python-dotenv
 flask-cors
-run it on a disabled web security chrome
+#run it on a disabled web security chrome
 
