@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Detector | Web Security Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #e0e7ff;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --gray-light: #e2e8f0;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            background-color: #f9fafb;
+            color: var(--dark);
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        
+        header {
+            background-color: var(--white);
+            padding: 1.5rem 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            font-size: 1.75rem;
+        }
+        
+        main {
+            padding: 2rem 0 6rem;
+        }
+        
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            font-size: 1.125rem;
+            color: var(--gray);
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background-color: var(--white);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .url-form {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+        
+        .url-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 2.5rem;
+            border: 1px solid var(--gray-light);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .url-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+            outline: none;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:disabled {
+            background-color: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error-message {
+            background-color: #fee2e2;
+            color: var(--danger);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            display: none;
+        }
+        
+        .loader {
+            display: none;
+            margin: 2rem auto;
+            text-align: center;
+        }
+        
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid var(--primary-light);
+            border-bottom-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loader-text {
+            color: var(--gray);
+            font-size: 0.875rem;
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .result-card {
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .result-header {
+            padding: 1.5rem;
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .result-header.safe {
+            background: linear-gradient(135deg, var(--success), #059669);
+        }
+        
+        .result-header.danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+        }
+        
+        .status-icon {
+            font-size: 2rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .result-title-area {
+            flex: 1;
+        }
+        
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .result-subtitle {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+        
+        .result-body {
+            background-color: var(--white);
+            padding: 1.5rem;
+            border: 1px solid var(--gray-light);
+            border-top: none;
+            border-bottom-left-radius: 0.75rem;
+            border-bottom-right-radius: 0.75rem;
+        }
+        
+        .url-display {
+            background-color: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+            word-break: break-all;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .result-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .risk-meter {
+            margin: 1.5rem 0;
+        }
+        
+        .risk-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .risk-value {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        
+        .meter-container {
+            height: 10px;
+            background-color: #e2e8f0;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        
+        .meter-fill {
+            height: 100%;
+            border-radius: 1rem;
+            transition: width 0.5s ease;
+        }
+        
+        .meter-fill.low {
+            background: linear-gradient(to right, #22c55e, #84cc16);
+        }
+        
+        .meter-fill.medium {
+            background: linear-gradient(to right, #84cc16, #f59e0b);
+        }
+        
+        .meter-fill.high {
+            background: linear-gradient(to right, #f59e0b, #ef4444);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .stat-card {
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+        
+        .stat-malicious {
+            color: var(--danger);
+        }
+        
+        .stat-suspicious {
+            color: var(--warning);
+        }
+        
+        .stat-harmless {
+            color: var(--success);
+        }
+        
+        .analysis-content {
+            background-color: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.7;
+            white-space: pre-line;
+        }
+        
+        .tips-section {
+            background-color: var(--white);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            padding: 2rem;
+        }
+        
+        .tips-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .tips-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .tip-card {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .tip-icon {
+            min-width: 40px;
+            height: 40px;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+        }
+        
+        .tip-content h4 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tip-content p {
+            font-size: 0.875rem;
+            color: var(--gray);
+        }
+        
+        footer {
+            background-color: var(--white);
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.05);
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+        
+        .footer-text {
+            font-size: 0.875rem;
+            color: var(--gray);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .url-form {
+                flex-direction: column;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .tips-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <a href="#" class="logo">
+                <i class="fas fa-shield-virus logo-icon"></i>
+                <span>PhishGuard</span>
+            </a>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <section class="hero">
+                <h1>Advanced Phishing Detection</h1>
+                <p>Scan any website URL to detect potential phishing threats using AI-powered analysis and security intelligence.</p>
+            </section>
+            
+            <section class="card">
+                <div class="url-form">
+                    <div class="input-wrapper">
+                        <i class="fas fa-globe input-icon"></i>
+                        <input type="text" id="urlInput" class="url-input" placeholder="Enter website URL (e.g., https://example.com)" autocomplete="off">
+                    </div>
+                    <button id="scanButton" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                        Scan URL
+                    </button>
+                </div>
+                <div id="errorMessage" class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="errorText">Error message will appear here</span>
+                </div>
+                <div id="loader" class="loader">
+                    <div class="spinner"></div>
+                    <p class="loader-text">Scanning and analyzing the URL for potential threats...</p>
+                </div>
+            </section>
+            
+            <section id="results" class="results">
+                <div class="result-card">
+                    <div id="resultHeader" class="result-header safe">
+                        <div id="statusIcon" class="status-icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="result-title-area">
+                            <h2 id="resultTitle" class="result-title">Website Appears Safe</h2>
+                            <p id="resultSubtitle" class="result-subtitle">No immediate threats detected</p>
+                        </div>
+                    </div>
+                    
+                    <div class="result-body">
+                        <div id="scannedUrl" class="url-display">https://example.com</div>
+                        
+                        <div class="result-section">
+                            <div class="section-title">
+                                <i class="fas fa-chart-line"></i>
+                                Threat Assessment
+                            </div>
+                            
+                            <div class="risk-meter">
+                                <div class="risk-label">
+                                    <span>Risk Score</span>
+                                    <span id="riskScoreValue" class="risk-value">0%</span>
+                                </div>
+                                <div class="meter-container">
+                                    <div id="riskMeterFill" class="meter-fill low" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <div id="statsGrid" class="stats-grid">
+                                <!-- Stats will be added dynamically -->
+                            </div>
+                        </div>
+                        
+                        <div id="geminiAnalysis" class="result-section" style="display: none;">
+                            <div class="section-title">
+                                <i class="fas fa-robot"></i>
+                                AI-Powered Analysis
+                            </div>
+                            <div id="analysisContent" class="analysis-content">
+                                Analysis will appear here...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="tips-section">
+                <h3 class="tips-title">
+                    <i class="fas fa-lightbulb"></i>
+                    Phishing Prevention Tips
+                </h3>
+                
+                <div class="tips-list">
+                    <div class="tip-card">
+                        <div class="tip-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h4>Check the URL</h4>
+                            <p>Always verify the website address before entering sensitive information. Look for misspellings or unusual domains.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tip-card">
+                        <div class="tip-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h4>Look for HTTPS</h4>
+                            <p>Secure websites use HTTPS and display a padlock icon in the address bar. Be cautious with HTTP-only sites.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tip-card">
+                        <div class="tip-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h4>Be Wary of Urgency</h4>
+                            <p>Phishing attempts often create false urgency to make you act without thinking. Take your time to verify.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tip-card">
+                        <div class="tip-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h4>Use Security Tools</h4>
+                            <p>Employ antivirus software and browser extensions that help identify and block malicious websites.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p class="footer-text">© 2025 PhishGuard • Powered by VirusTotal & Google Gemini • For educational purposes only</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlInput = document.getElementById('urlInput');
+            const scanButton = document.getElementById('scanButton');
+            const loader = document.getElementById('loader');
+            const results = document.getElementById('results');
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const scannedUrl = document.getElementById('scannedUrl');
+            const riskScoreValue = document.getElementById('riskScoreValue');
+            const riskMeterFill = document.getElementById('riskMeterFill');
+            const statsGrid = document.getElementById('statsGrid');
+            const statusIcon = document.getElementById('statusIcon');
+            const resultHeader = document.getElementById('resultHeader');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultSubtitle = document.getElementById('resultSubtitle');
+            const geminiAnalysis = document.getElementById('geminiAnalysis');
+            const analysisContent = document.getElementById('analysisContent');
+            
+            // URL validation
+            function isValidUrl(url) {
+                try {
+                    new URL(url);
+                    return true;
+                } catch (err) {
+                    return false;
+                }
+            }
+            
+            // Set result status based on phishing detection
+            function setResultStatus(isPhishing) {
+                if (isPhishing) {
+                    statusIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                    resultHeader.className = 'result-header danger';
+                    resultTitle.textContent = 'Phishing Detected';
+                    resultSubtitle.textContent = 'This website appears to be malicious';
+                } else {
+                    statusIcon.innerHTML = '<i class="fas fa-check"></i>';
+                    resultHeader.className = 'result-header safe';
+                    resultTitle.textContent = 'Website Appears Safe';
+                    resultSubtitle.textContent = 'No immediate threats detected';
+                }
+            }
+            
+            // Update risk meter UI based on score
+            function updateRiskMeter(score) {
+                riskScoreValue.textContent = `${score}%`;
+                riskMeterFill.style.width = `${Math.min(score, 100)}%`;
+                
+                // Change color based on risk level
+                if (score < 30) {
+                    riskMeterFill.className = 'meter-fill low';
+                } else if (score < 70) {
+                    riskMeterFill.className = 'meter-fill medium';
+                } else {
+                    riskMeterFill.className = 'meter-fill high';
+                }
+            }
+            
+            // Display stats
+            function displayStats(stats) {
+                statsGrid.innerHTML = '';
+                
+                const statTypes = [
+                    { key: 'malicious', label: 'Malicious', icon: 'fa-virus', class: 'stat-malicious' },
+                    { key: 'suspicious', label: 'Suspicious', icon: 'fa-exclamation-triangle', class: 'stat-suspicious' },
+                    { key: 'harmless', label: 'Harmless', icon: 'fa-check-circle', class: 'stat-harmless' },
+                    { key: 'undetected', label: 'Undetected', icon: 'fa-question-circle', class: '' }
+                ];
+                
+                statTypes.forEach(stat => {
+                    const value = stats[stat.key] || 0;
+                    const statItem = document.createElement('div');
+                    statItem.className = 'stat-card fade-in';
+                    statItem.innerHTML = `
+                        <div class="stat-value ${stat.class}">${value}</div>
+                        <div class="stat-label">
+                            <i class="fas ${stat.icon}"></i>
+                            <span>${stat.label}</span>
+                        </div>
+                    `;
+                    statsGrid.appendChild(statItem);
+                });
+            }
+            
+            // Scan URL
+            async function scanUrl(url) {
+                try {
+                    // Use a CORS proxy if direct access is blocked
+                    // Note: For production, you should set up proper CORS on your server instead
+                    const apiUrl = 'http://localhost:5000/api/scan';
+                    
+                    // For this example, we'll still try the direct URL but with mode: 'cors'
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        mode: 'cors', // Explicitly request CORS
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ url })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    // Show a more helpful error message for CORS issues
+                    if (error.message.includes('NetworkError') || 
+                        error.message.includes('Failed to fetch') ||
+                        error.message.includes('CORS')) {
+                        console.error('CORS Error: The request was blocked due to CORS policy.');
+                        errorText.textContent = 'CORS Error: Cannot connect to the API server. Please ensure the backend has CORS enabled.';
+                        errorMessage.style.display = 'block';
+                    }
+                    console.error('Error:', error);
+                    throw error;
+                }
+            }
+            
+            // Handle scan button click
+            scanButton.addEventListener('click', async function() {
+                const url = urlInput.value.trim();
+                
+                // Reset UI
+                errorMessage.style.display = 'none';
+                results.style.display = 'none';
+                
+                // Validate URL
+                if (!url) {
+                    errorText.textContent = 'Please enter a URL to scan';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+                
+                if (!isValidUrl(url)) {
+                    errorText.textContent = 'Please enter a valid URL (e.g., https://example.com)';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+                
+                // Show loader
+                loader.style.display = 'block';
+                scanButton.disabled = true;
+                
+                try {
+                    const data = await scanUrl(url);
+                    
+                    // Handle error
+                    if (data.error) {
+                        errorText.textContent = `Error: ${data.error}`;
+                        errorMessage.style.display = 'block';
+                        loader.style.display = 'none';
+                        scanButton.disabled = false;
+                        return;
+                    }
+                    
+                    // Update UI with results
+                    scannedUrl.textContent = data.url;
+                    
+                    const riskScore = data.risk_score;
+                    const isPhishing = riskScore > 0.99;
+                    
+                    updateRiskMeter(riskScore);
+                    setResultStatus(isPhishing);
+                    displayStats(data.stats);
+                    
+                    // Show Gemini analysis if available
+                    if (data.gemini_analysis) {
+                        analysisContent.textContent = data.gemini_analysis;
+                        geminiAnalysis.style.display = 'block';
+                    } else {
+                        geminiAnalysis.style.display = 'none';
+                    }
+                    
+                    // Show results with animation
+                    results.style.display = 'block';
+                    results.classList.add('fade-in');
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    errorText.textContent = 'Failed to scan URL. Please try again later.';
+                    errorMessage.style.display = 'block';
+                } finally {
+                    loader.style.display = 'none';
+                    scanButton.disabled = false;
+                }
+            });
+            
+            // Allow submitting by pressing Enter
+            urlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    scanButton.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
